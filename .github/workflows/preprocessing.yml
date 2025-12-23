@@ -10,32 +10,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1️⃣ Checkout repository
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
-    # 2️⃣ Setup Python
-    - name: Setup Python
-      uses: actions/setup-python@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
         python-version: "3.12"
 
-    # 3️⃣ Install dependencies
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # 4️⃣ Run preprocessing script
-    - name: Run preprocessing script
+    - name: Run Preprocessing script
       run: |
         python Preprocessing/automate_AzrielKevin.py
-
-    # 5️⃣ Commit & push hasil preprocessing
-    - name: Commit and push preprocessing results
-      run: |
-        git add Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing.csv
-        git commit -m "Update preprocessing dataset (auto)" || echo "No changes to commit"
-        git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:main
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
