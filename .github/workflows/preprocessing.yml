@@ -1,13 +1,12 @@
-name: Preprocessing Dataset
+name: Preprocessing Pipeline
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch: # Bisa dijalankan manual
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
-  preprocess:
+  preprocessing:
     runs-on: ubuntu-latest
 
     steps:
@@ -15,37 +14,30 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # 2️⃣ Set up Python
-    - name: Set up Python
+    # 2️⃣ Setup Python
+    - name: Setup Python
       uses: actions/setup-python@v4
       with:
-        python-version: "3.11"
+        python-version: "3.12"
 
     # 3️⃣ Install dependencies
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pandas numpy scikit-learn joblib
+        pip install -r requirements.txt
 
     # 4️⃣ Run preprocessing script
-    - name: Run preprocessing
+    - name: Run preprocessing script
       run: |
-        python Preprocessing/automate_AzrielKevin.py
+        python preprocessing/automate_AzrielKevin.py
 
     # 5️⃣ Commit & push hasil preprocessing
-    - name: Commit and push changes
+    - name: Commit and push preprocessing results
       run: |
-        # Set Git config
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-
-        # Tambahkan semua file hasil preprocessing
-        git add Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing/*
-
-        # Commit jika ada perubahan
+        git add Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing.csv
+        git add Preprocessing/preprocessor_pipeline.joblib
+        git add Preprocessing/feature_header.csv
         git commit -m "Update preprocessing dataset (auto)" || echo "No changes to commit"
-
-        # Push menggunakan token untuk menghindari 403
-        git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
+        git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:main
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
