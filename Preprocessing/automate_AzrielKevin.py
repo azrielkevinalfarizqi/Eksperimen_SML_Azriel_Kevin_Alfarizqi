@@ -1,6 +1,10 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.compose import ColumnTransformer
+from joblib import dump
 import os
 
 # =========================
@@ -41,7 +45,7 @@ def handle_outlier_iqr_capping(data, column):
 # MAIN PREPROCESSING FUNCTION
 # =========================
 
-def preprocess_data(input_path, output_path, target_column="traffic_volume"):
+def preprocess_data(input_path, output_dir, target_column="traffic_volume"):
     # 1️⃣ Baca CSV
     df = pd.read_csv(input_path)
 
@@ -64,20 +68,35 @@ def preprocess_data(input_path, output_path, target_column="traffic_volume"):
     df = df.drop_duplicates()
 
     # 4️⃣ One-hot encoding kategorikal
-    df = pd.get_dummies(df, columns=categorical_cols, drop_first=True, dtype=int)
+    df_encoded = pd.get_dummies(df, columns=categorical_cols, drop_first=True, dtype=int)
 
     # 5️⃣ Scaling numerik
-    num_cols = ["temp", "rain_1h", "snow_1h", "clouds_all"]
-    num_cols = [c for c in num_cols if c in df.columns and c != target_column]
+    numeric_features = ["temp", "rain_1h", "snow_1h", "clouds_all"]
+    numeric_features = [c for c in numeric_features if c in df_encoded.columns and c != target_column]
     scaler = StandardScaler()
-    df[num_cols] = scaler.fit_transform(df[num_cols])
+    df_encoded[numeric_features] = scaler.fit_transform(df_encoded[numeric_features])
 
-    # 6️⃣ Simpan hasil
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    df.to_csv(output_path, index=False)
+    # 6️⃣ Build preprocessing pipeline
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("num", Pipeline([("imputer", SimpleImputer(strategy="median")), ("scaler", StandardScaler())]), numeric_features),
+            ("cat", Pipeline([("imputer", SimpleImputer(strategy="most_frequent")), ("encoder", "passthrough")]), [c for c in df_encoded.columns if c not in numeric_features + [target_column]])
+        ]
+    )
+    preprocessor.fit(df_encoded.drop(columns=[target_column]))
 
-    print(f"✅ Preprocessing selesai, hasil disimpan di: {output_path}")
-    return df
+    # 7️⃣ Simpan hasil
+    os.makedirs(output_dir, exist_ok=True)
+    csv_path = os.path.join(output_dir, "Metro_Interstate_Traffic_Volume_preprocessing.csv")
+    pipeline_path = os.path.join(output_dir, "preprocessor_pipeline.joblib")
+    header_path = os.path.join(output_dir, "feature_header.csv")
+
+    df_encoded.to_csv(csv_path, index=False)
+    dump(preprocessor, pipeline_path)
+    pd.DataFrame(columns=df_encoded.drop(columns=[target_column]).columns).to_csv(header_path, index=False)
+
+    print(f"✅ Preprocessing selesai. File disimpan di: {csv_path}")
+    return df_encoded
 
 # =========================
 # CLI
@@ -85,7 +104,7 @@ def preprocess_data(input_path, output_path, target_column="traffic_volume"):
 
 if __name__ == "__main__":
     INPUT_PATH = "Dataset/Metro_Interstate_Traffic_Volume.csv"
-    OUTPUT_PATH = "Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing.csv"
-    TARGET_COLUMN = "traffic_volume"  # ganti sesuai kolom targetmu
+    OUTPUT_DIR = "Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing"
+    TARGET_COLUMN = "traffic_volume"
 
-    preprocess_data(INPUT_PATH, OUTPUT_PATH, TARGET_COLUMN)
+    preprocess_data(INPUT_PATH, OUTPUT_DIR, TARGET_COLUMN)
