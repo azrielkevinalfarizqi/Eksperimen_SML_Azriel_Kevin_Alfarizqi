@@ -37,6 +37,6 @@ jobs:
       run: |
         git config --global user.name "azrielkevinalfarizqi"
         git config --global user.email "kevinazriel28@gmail.com"
-        git add preprocessing/Metro_Interstate_Traffic_Volume_preprocessing.csv
+        git add Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing.csv
         git commit -m "Update preprocessing dataset (auto)" || echo "No changes to commit"
         git push
