@@ -1,18 +1,17 @@
 name: Preprocessing Dataset
 
-# Trigger workflow saat ada push di branch main
 on:
   push:
     branches:
       - main
-  workflow_dispatch: # Bisa juga dijalankan manual
+  workflow_dispatch: # Bisa dijalankan manual
 
 jobs:
   preprocess:
     runs-on: ubuntu-latest
 
     steps:
-    # 1️⃣ Checkout repo
+    # 1️⃣ Checkout repository
     - name: Checkout repository
       uses: actions/checkout@v3
 
@@ -33,7 +32,7 @@ jobs:
       run: |
         python Preprocessing/automate_AzrielKevin.py \
           --input_path Dataset/Metro_Interstate_Traffic_Volume.csv \
-          --output_csv Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing.csv \
+          --output_csv Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing/Metro_Interstate_Traffic_Volume_preprocessing.csv \
           --pipeline_path Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing/preprocessor_pipeline.joblib \
           --header_path Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing/feature_header.csv \
           --target_column traffic_volume
@@ -41,12 +40,17 @@ jobs:
     # 5️⃣ Commit & push hasil preprocessing
     - name: Commit and push changes
       run: |
+        # Set Git config
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        git add Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing.csv
-        git add Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing/preprocessor_pipeline.joblib
-        git add Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing/feature_header.csv
+
+        # Tambahkan semua file preprocessing
+        git add Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing/
+
+        # Commit jika ada perubahan
         git commit -m "Update preprocessing dataset (auto)" || echo "No changes to commit"
+
+        # Push ke main branch menggunakan token
         git push
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
