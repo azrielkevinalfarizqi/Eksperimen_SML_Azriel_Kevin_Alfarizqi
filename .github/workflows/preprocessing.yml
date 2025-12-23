@@ -35,8 +35,6 @@ jobs:
     - name: Commit and push preprocessing results
       run: |
         git add Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing.csv
-        git add Preprocessing/preprocessor_pipeline.joblib
-        git add Preprocessing/feature_header.csv
         git commit -m "Update preprocessing dataset (auto)" || echo "No changes to commit"
         git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:main
       env:
