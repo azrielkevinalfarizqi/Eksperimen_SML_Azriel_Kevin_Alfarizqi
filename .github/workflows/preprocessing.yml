@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1️⃣ Checkout repo
+    # 1️⃣ Checkout repository
     - name: Checkout repository
       uses: actions/checkout@v3
 
@@ -45,7 +45,7 @@ jobs:
         # Commit jika ada perubahan
         git commit -m "Update preprocessing dataset (auto)" || echo "No changes to commit"
 
-        # Push ke main branch menggunakan token
-        git push
+        # Push menggunakan token untuk menghindari 403
+        git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
