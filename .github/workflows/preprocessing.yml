@@ -29,7 +29,7 @@ jobs:
     # 4️⃣ Run preprocessing script
     - name: Run preprocessing script
       run: |
-        python preprocessing/automate_AzrielKevin.py
+        python Preprocessing/automate_AzrielKevin.py
 
     # 5️⃣ Commit & push hasil preprocessing
     - name: Commit and push preprocessing results
