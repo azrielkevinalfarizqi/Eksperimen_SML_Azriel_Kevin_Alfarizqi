@@ -1,10 +1,6 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import Pipeline
-from sklearn.impute import SimpleImputer
-from sklearn.compose import ColumnTransformer
-from joblib import dump
 import os
 
 # =========================
@@ -45,7 +41,7 @@ def handle_outlier_iqr_capping(data, column):
 # MAIN PREPROCESSING FUNCTION
 # =========================
 
-def preprocess_data(input_path, output_dir, target_column="traffic_volume"):
+def preprocess_data(input_path, output_path, target_column="traffic_volume"):
     # 1️⃣ Baca CSV
     df = pd.read_csv(input_path)
 
@@ -60,43 +56,39 @@ def preprocess_data(input_path, output_dir, target_column="traffic_volume"):
     categorical_cols = ["weather_main", "holiday", "weather_description"]
     float_cols = ["rain_1h", "snow_1h"]
 
-    # 3️⃣ Cleaning
+    # 3️⃣ Cleaning dasar
     df = replace_out_of_range_with_median(df, valid_ranges)
     df = clean_categorical_columns(df, categorical_cols)
     df = convert_comma_to_float(df, float_cols)
     df = handle_outlier_iqr_capping(df, "temp")
     df = df.drop_duplicates()
 
-    # 4️⃣ One-hot encoding kategorikal
-    df_encoded = pd.get_dummies(df, columns=categorical_cols, drop_first=True, dtype=int)
+    # 4️⃣ Tangani missing values
+    # Numerik → median
+    num_cols = ["temp", "rain_1h", "snow_1h", "clouds_all", target_column]
+    for col in num_cols:
+        if col in df.columns:
+            df[col].fillna(df[col].median(), inplace=True)
+    # Kategorikal → "unknown"
+    for col in categorical_cols:
+        if col in df.columns:
+            df[col].fillna("unknown", inplace=True)
 
-    # 5️⃣ Scaling numerik
-    numeric_features = ["temp", "rain_1h", "snow_1h", "clouds_all"]
-    numeric_features = [c for c in numeric_features if c in df_encoded.columns and c != target_column]
+    # 5️⃣ One-hot encoding kategorikal
+    df = pd.get_dummies(df, columns=categorical_cols, drop_first=True, dtype=int)
+
+    # 6️⃣ Scaling numerik (kecuali target)
+    scale_cols = ["temp", "rain_1h", "snow_1h", "clouds_all"]
+    scale_cols = [c for c in scale_cols if c in df.columns and c != target_column]
     scaler = StandardScaler()
-    df_encoded[numeric_features] = scaler.fit_transform(df_encoded[numeric_features])
-
-    # 6️⃣ Build preprocessing pipeline
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ("num", Pipeline([("imputer", SimpleImputer(strategy="median")), ("scaler", StandardScaler())]), numeric_features),
-            ("cat", Pipeline([("imputer", SimpleImputer(strategy="most_frequent")), ("encoder", "passthrough")]), [c for c in df_encoded.columns if c not in numeric_features + [target_column]])
-        ]
-    )
-    preprocessor.fit(df_encoded.drop(columns=[target_column]))
+    df[scale_cols] = scaler.fit_transform(df[scale_cols])
 
     # 7️⃣ Simpan hasil
-    os.makedirs(output_dir, exist_ok=True)
-    csv_path = os.path.join(output_dir, "Metro_Interstate_Traffic_Volume_preprocessing.csv")
-    pipeline_path = os.path.join(output_dir, "preprocessor_pipeline.joblib")
-    header_path = os.path.join(output_dir, "feature_header.csv")
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    df.to_csv(output_path, index=False)
 
-    df_encoded.to_csv(csv_path, index=False)
-    dump(preprocessor, pipeline_path)
-    pd.DataFrame(columns=df_encoded.drop(columns=[target_column]).columns).to_csv(header_path, index=False)
-
-    print(f"✅ Preprocessing selesai. File disimpan di: {csv_path}")
-    return df_encoded
+    print(f"✅ Preprocessing selesai, hasil disimpan di: {output_path}")
+    return df
 
 # =========================
 # CLI
@@ -104,7 +96,7 @@ def preprocess_data(input_path, output_dir, target_column="traffic_volume"):
 
 if __name__ == "__main__":
     INPUT_PATH = "Dataset/Metro_Interstate_Traffic_Volume.csv"
-    OUTPUT_DIR = "Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing"
+    OUTPUT_PATH = "Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing.csv"
     TARGET_COLUMN = "traffic_volume"
 
-    preprocess_data(INPUT_PATH, OUTPUT_DIR, TARGET_COLUMN)
+    preprocess_data(INPUT_PATH, OUTPUT_PATH, TARGET_COLUMN)
