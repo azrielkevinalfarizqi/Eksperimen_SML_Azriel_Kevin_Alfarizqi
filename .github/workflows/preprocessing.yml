@@ -26,11 +26,11 @@ jobs:
 
     - name: Run preprocessing
       run: |
-        python preprocessing/automate_AzrielKevin.py \
-          --input_path dataset/Metro_Interstate_Traffic_Volume.csv \
-          --output_csv preprocessing/Metro_Interstate_Traffic_Volume_preprocessing.csv \
-          --pipeline_path preprocessing/Metro_Interstate_Traffic_Volume_preprocessing/preprocessor_pipeline.joblib \
-          --header_path preprocessing/Metro_Interstate_Traffic_Volume_preprocessing/feature_header.csv \
+        python Preprocessing/automate_AzrielKevin.py \
+          --input_path Dataset/Metro_Interstate_Traffic_Volume.csv \
+          --output_csv Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing.csv \
+          --pipeline_path Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing/preprocessor_pipeline.joblib \
+          --header_path Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing/feature_header.csv \
           --target_column traffic_volume
 
     - name: Commit & push processed dataset
