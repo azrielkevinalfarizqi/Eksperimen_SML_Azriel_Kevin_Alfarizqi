@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1️⃣ Checkout repository
+    # 1️⃣ Checkout repo
     - name: Checkout repository
       uses: actions/checkout@v3
 
@@ -30,12 +30,7 @@ jobs:
     # 4️⃣ Run preprocessing script
     - name: Run preprocessing
       run: |
-        python Preprocessing/automate_AzrielKevin.py \
-          --input_path Dataset/Metro_Interstate_Traffic_Volume.csv \
-          --output_csv Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing/Metro_Interstate_Traffic_Volume_preprocessing.csv \
-          --pipeline_path Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing/preprocessor_pipeline.joblib \
-          --header_path Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing/feature_header.csv \
-          --target_column traffic_volume
+        python Preprocessing/automate_AzrielKevin.py
 
     # 5️⃣ Commit & push hasil preprocessing
     - name: Commit and push changes
@@ -44,8 +39,8 @@ jobs:
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
 
-        # Tambahkan semua file preprocessing
-        git add Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing/
+        # Tambahkan semua file hasil preprocessing
+        git add Preprocessing/Metro_Interstate_Traffic_Volume_preprocessing/*
 
         # Commit jika ada perubahan
         git commit -m "Update preprocessing dataset (auto)" || echo "No changes to commit"
